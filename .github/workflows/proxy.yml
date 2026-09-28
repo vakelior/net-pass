@@ -22,6 +22,8 @@ jobs:
 
       - name: setup ssh server
         run: |
+          sudo mkdir -p /run/sshd
+          sudo chmod 755 /run/sshd
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PUBKEY }}" >> ~/.ssh/authorized_keys
           chmod 700 ~/.ssh
