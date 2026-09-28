@@ -9,31 +9,26 @@ jobs:
   proxy:
     runs-on: ubuntu-latest
     steps:
-      - name: install
+      - name: install proxy
         run: |
           sudo apt update -y
-          sudo apt install -y openssh-server
+          sudo apt install -y microsocks curl
 
-      - name: print public info
+      - name: show connection info
         run: |
-          echo "PUBLIC_IP=$(curl -s https://api.ipify.org)"
-          echo "Run the connection command on your device:"
-          echo "  ssh -p 2222 -D 1080 -N runner@$(curl -s https://api.ipify.org)"
+          PUBLIC_IP=$(curl -s https://api.ipify.org)
+          echo "=========================================="
+          echo "SOCKS5 CONNECTION INFO"
+          echo "=========================================="
+          echo "Host     : $PUBLIC_IP"
+          echo "Port     : 1080"
+          echo "Type     : SOCKS5"
+          echo "Username : proxy"
+          echo "Password : netpass123"
+          echo "=========================================="
 
-      - name: setup ssh server
+      - name: run socks5 proxy
         run: |
-          sudo mkdir -p /run/sshd
-          sudo chmod 755 /run/sshd
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PUBKEY }}" >> ~/.ssh/authorized_keys
-          chmod 700 ~/.ssh
-          chmod 600 ~/.ssh/authorized_keys
-          sudo ssh-keygen -A
-          sudo /usr/sbin/sshd -p 2222 -o PermitRootLogin=no -o PasswordAuthentication=no
-
-      - name: keep alive
-        run: |
-          for i in $(seq 1 350); do
-            echo "alive $i"
-            sleep 60
-          done
+          microsocks -1 -i 0.0.0.0 -p 1080 -u proxy -P netpass123 > /tmp/microsocks.log 2>&1 &
+          echo "socks5 proxy started on port 1080"
+          for i in $(seq 1 350); do sleep 60; done
